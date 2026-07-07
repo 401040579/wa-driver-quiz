@@ -40,6 +40,16 @@
   .qmeta{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px;font-size:12px}
   .cat-tag{background:#eef4f9;color:var(--wa-blue);border:1px solid #dbe7f1;padding:2px 9px;border-radius:999px;font-weight:600}
   .qno{color:var(--muted)}
+  .qmeta .right{display:flex;gap:10px;align-items:center}
+  .star{font:inherit;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 11px;cursor:pointer;color:var(--muted);font-weight:600}
+  .star:hover{border-color:#e3c14e}
+  .star.on{background:#fff8e1;border-color:#efc94c;color:#a6791a}
+  .bookbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:13px;color:var(--muted)}
+  .bookbar b{color:var(--ink)}
+  .clearbtn{font:inherit;font-size:12px;border:1px solid var(--line);background:#fff;color:var(--bad);border-radius:8px;padding:4px 10px;cursor:pointer;font-weight:600}
+  .clearbtn:hover{background:var(--bad-bg);border-color:var(--bad)}
+  .linkbtn{font:inherit;font-size:13px;border:1px solid var(--ok);background:#fff;color:var(--ok);border-radius:8px;padding:5px 11px;cursor:pointer;font-weight:600;margin-top:8px}
+  .linkbtn:hover{background:var(--ok-bg)}
   .qtext{font-size:17px;font-weight:600;margin:8px 0 14px}
   .opts{display:flex;flex-direction:column;gap:10px}
   .opt{display:flex;gap:11px;align-items:flex-start;text-align:left;padding:12px 13px;border:1.5px solid var(--line);
@@ -100,12 +110,21 @@
       <span>答错 <b id="badLbl" style="color:var(--bad)">0</b></span>
       <span>正确率 <b id="accLbl">—</b></span>
     </div>
+    <div class="bookbar">
+      <span>❌ 错题本 <b id="wrongCount">0</b> 题 (答错自动收录)</span>
+      <span>⭐ 收藏 <b id="starCount">0</b> 题</span>
+      <button class="clearbtn" id="clearWrongBtn" type="button">清空错题本</button>
+      <span style="font-size:12px">在上方「类别」中选 <b>❌ 错题本</b> 或 <b>⭐ 收藏夹</b> 即可只练这些题</span>
+    </div>
   </div>
 
   <div class="panel" id="quizCard">
     <div class="qmeta">
       <span class="cat-tag" id="qCat">—</span>
-      <span class="qno" id="qNo">—</span>
+      <span class="right">
+        <button class="star" id="starBtn" type="button" title="收藏此题，之后可只练收藏">☆ 收藏</button>
+        <span class="qno" id="qNo">—</span>
+      </span>
     </div>
     <div class="qtext" id="qText">点击「开始」加载题目。</div>
     <div class="opts" id="opts"></div>
@@ -407,23 +426,46 @@ const QUESTIONS = [
 const $=id=>document.getElementById(id);
 let pool=[], cur=0, answered=[], mode="practice";
 
+/* ---- 错题本 / 收藏夹: 保存在浏览器本地 (localStorage)，按题目内容生成稳定 ID ---- */
+function QID(q){ let h=5381; const s=q.q; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h|=0; } return "q"+(h>>>0).toString(36); }
+function loadSet(k){ try{ return new Set(JSON.parse(localStorage.getItem(k)||"[]")); }catch(e){ return new Set(); } }
+let wrongSet=loadSet("wa_quiz_wrong"), starSet=loadSet("wa_quiz_star");
+function saveSets(){ try{ localStorage.setItem("wa_quiz_wrong",JSON.stringify([...wrongSet])); localStorage.setItem("wa_quiz_star",JSON.stringify([...starSet])); }catch(e){} }
+function refreshBookUI(){
+  const w=wrongSet.size, s=starSet.size;
+  if($("wrongCount")) $("wrongCount").textContent=w;
+  if($("starCount")) $("starCount").textContent=s;
+  const sel=$("catSel");
+  if(sel) [...sel.options].forEach(o=>{
+    if(o.value==="__wrong") o.textContent=`❌ 错题本 (${w})`;
+    if(o.value==="__star")  o.textContent=`⭐ 收藏夹 (${s})`;
+  });
+}
+
 function categories(){
   const set=[...new Set(QUESTIONS.map(q=>q.cat))];
   return set;
 }
 function initCats(){
   const sel=$("catSel");
-  sel.innerHTML='<option value="__all">全部类别</option>'+
+  sel.innerHTML=
+    '<option value="__all">全部类别</option>'+
+    '<option value="__wrong">❌ 错题本</option>'+
+    '<option value="__star">⭐ 收藏夹</option>'+
+    '<option disabled>──── 按章节 ────</option>'+
     categories().map(c=>`<option value="${c}">${c}</option>`).join("");
   $("countBadge").textContent="共 "+QUESTIONS.length+" 题";
+  refreshBookUI();
 }
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
 function buildPool(doShuffle){
   const cat=$("catSel").value;
   mode=$("modeSel").value;
-  let arr=QUESTIONS.map((q,i)=>({...q,_i:i}));
-  if(cat!=="__all") arr=arr.filter(q=>q.cat===cat);
+  let arr=QUESTIONS.map((q,i)=>({...q,_i:i,_id:QID(q)}));
+  if(cat==="__wrong")      arr=arr.filter(q=>wrongSet.has(q._id));
+  else if(cat==="__star")  arr=arr.filter(q=>starSet.has(q._id));
+  else if(cat!=="__all")   arr=arr.filter(q=>q.cat===cat);
   if(mode==="exam"){ arr=shuffle(arr).slice(0,Math.min(40,arr.length)); }
   else if(doShuffle){ arr=shuffle(arr); }
   pool=arr; cur=0; answered=new Array(pool.length).fill(null);
@@ -437,10 +479,26 @@ function start(doShuffle){
 }
 
 function render(){
-  if(pool.length===0){ $("qText").textContent="该类别暂无题目。"; $("opts").innerHTML=""; return;}
+  const cval=$("catSel").value;
+  if(pool.length===0){
+    $("qCat").textContent="—"; $("qNo").textContent="";
+    $("opts").innerHTML=""; $("explain").className="explain";
+    $("starBtn").style.visibility="hidden";
+    $("qText").textContent = cval==="__wrong"
+      ? "🎉 错题本是空的 — 答错的题会自动收进这里，之后可回来专攻。"
+      : cval==="__star"
+      ? "收藏夹是空的 — 点题目右上角的「☆ 收藏」即可把题目加进来。"
+      : "该类别暂无题目。";
+    updateStats(); return;
+  }
+  $("starBtn").style.visibility="visible";
   const q=pool[cur];
   $("qCat").textContent=q.cat;
   $("qNo").textContent=`第 ${cur+1} / ${pool.length} 题`;
+  const isStar=starSet.has(q._id);
+  const sb=$("starBtn");
+  sb.textContent=isStar?"★ 已收藏":"☆ 收藏";
+  sb.classList.toggle("on",isStar);
   $("qText").textContent=q.q;
   const optsEl=$("opts"); optsEl.innerHTML="";
   const chosen=answered[cur];
@@ -461,8 +519,12 @@ function render(){
   if(chosen!==null && mode==="practice"){
     const ok=chosen===q.a;
     ex.className="explain show";
-    ex.innerHTML=`<div class="verdict ${ok?'ok':'bad'}">${ok?'✓ 回答正确':'✗ 回答错误'}　正确答案: ${"ABCD"[q.a]}</div>
+    let html=`<div class="verdict ${ok?'ok':'bad'}">${ok?'✓ 回答正确':'✗ 回答错误'}　正确答案: ${"ABCD"[q.a]}</div>
       <div>${q.exp}</div>`;
+    if(wrongSet.has(q._id)) html+=`<button class="linkbtn" id="rmWrongBtn" type="button">✓ 已掌握，移出错题本</button>`;
+    ex.innerHTML=html;
+    const rm=$("rmWrongBtn");
+    if(rm) rm.onclick=()=>{ wrongSet.delete(q._id); saveSets(); refreshBookUI(); render(); };
   }else{ ex.className="explain"; ex.innerHTML=""; }
   updateStats();
 }
@@ -470,6 +532,7 @@ function render(){
 function choose(idx){
   if(answered[cur]!==null) return;
   answered[cur]=idx;
+  if(idx!==pool[cur].a){ wrongSet.add(pool[cur]._id); saveSets(); refreshBookUI(); }
   render();
 }
 
@@ -491,6 +554,9 @@ function next(){
 function prev(){ if(cur>0){ cur--; render(); } }
 
 function finishExam(){
+  let added=false;
+  answered.forEach((a,i)=>{ if(a!==null && a!==pool[i].a){ wrongSet.add(pool[i]._id); added=true; } });
+  if(added){ saveSets(); refreshBookUI(); }
   const ok=answered.reduce((n,a,i)=>n+(a!==null&&a===pool[i].a?1:0),0);
   const total=pool.length;
   const pct=Math.round(ok/total*100);
@@ -507,6 +573,19 @@ function finishExam(){
 /* 事件绑定 */
 $("startBtn").onclick=()=>start(false);
 $("shuffleBtn").onclick=()=>start(true);
+$("starBtn").onclick=()=>{
+  if(!pool[cur]) return;
+  const id=pool[cur]._id;
+  if(starSet.has(id)) starSet.delete(id); else starSet.add(id);
+  saveSets(); refreshBookUI(); render();
+};
+$("clearWrongBtn").onclick=()=>{
+  if(wrongSet.size===0){ alert("错题本已经是空的。"); return; }
+  if(confirm("确定清空错题本吗？共 "+wrongSet.size+" 题，此操作不可撤销。")){
+    wrongSet.clear(); saveSets(); refreshBookUI();
+    if($("catSel").value==="__wrong") start(false);
+  }
+};
 $("nextBtn").onclick=next;
 $("prevBtn").onclick=prev;
 $("againBtn").onclick=()=>start(mode==="exam");

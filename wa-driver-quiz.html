@@ -51,6 +51,12 @@
   .linkbtn{font:inherit;font-size:13px;border:1px solid var(--ok);background:#fff;color:var(--ok);border-radius:8px;padding:5px 11px;cursor:pointer;font-weight:600;margin-top:8px}
   .linkbtn:hover{background:var(--ok-bg)}
   .qtext{font-size:17px;font-weight:600;margin:8px 0 14px}
+  .qimg{display:none;margin:0 0 14px}
+  .qimg.show{display:flex}
+  .qimg svg{height:118px;max-width:100%;filter:drop-shadow(0 1px 3px rgba(20,40,60,.22))}
+  @keyframes blinkSig{0%,55%{opacity:1}56%,100%{opacity:.12}}
+  .qimg .blink{animation:blinkSig 1.1s infinite}
+  @media(max-width:520px){.qimg svg{height:98px}}
   .opts{display:flex;flex-direction:column;gap:10px}
   .opt{display:flex;gap:11px;align-items:flex-start;text-align:left;padding:12px 13px;border:1.5px solid var(--line);
     border-radius:11px;background:#fff;cursor:pointer;transition:border-color .12s,background .12s;font-size:15px}
@@ -127,6 +133,7 @@
       </span>
     </div>
     <div class="qtext" id="qText">点击「开始」加载题目。</div>
+    <div class="qimg" id="qImg" aria-hidden="true"></div>
     <div class="opts" id="opts"></div>
     <div class="explain" id="explain"></div>
     <div class="nav">
@@ -153,7 +160,7 @@
 
 <script>
 /* ===================== 题库数据 =====================
-   字段: cat 类别 | q 题干 | opts 选项 | a 正确项索引 | exp 解析
+   字段: cat 类别 | q 题干 | opts 选项 | a 正确项索引 (选项顺序会在出题时随机打乱) | exp 解析 | img 配图键名 (对应 SIGNS 内置 SVG)
 */
 const QUESTIONS = [
 
@@ -216,57 +223,57 @@ const QUESTIONS = [
 {cat:"受影响·分心驾驶",q:"如果你认为自己被其他驾驶人尾随或骚扰，应该？",opts:["驾车前往有其他人和营业商铺的区域，必要时报警","立即停车对峙","加速甩开对方","开回家中"],a:0,exp:"若认为被尾随或骚扰，应驾车前往有人和营业商铺的区域，必要时报警；不要开回自己家。"},
 
 /* ---------- 4. 交通信号灯 ---------- */
-{cat:"交通信号灯",q:"在亮起红灯的路口完全停车后，如果没有「红灯禁止转向」标志且有足够空间，你可以？",opts:["右转 (完全停车让行后)","直接直行","随意左转到双向道路","加速通过"],a:0,exp:"完全停车后，若无「No turn on red」标志且有足够空间汇入车流，可以右转；也可左转驶入单行道。"},
-{cat:"交通信号灯",q:"闪烁的红灯表示什么？",opts:["等同于停车标志，须完全停下再轮流通行","可减速通过","前方施工","等同于绿灯"],a:0,exp:"闪烁的红灯等同于停车标志，须完全停下，等候轮到你通行时再继续行驶。"},
-{cat:"交通信号灯",q:"闪烁的黄灯表示什么？",opts:["等同于让行标志，减速并在享有优先权后通行","必须停车","加速通过","前方无路"],a:0,exp:"闪烁的黄灯等同于让行标志，应减速，将路口当作无信号灯管制的路口，享有优先权后再通行。"},
-{cat:"交通信号灯",q:"长亮的黄灯表示什么？",opts:["信号灯即将变红，应减速并准备停车","可以加速抢行","必须立即急刹","等同于绿灯"],a:0,exp:"黄灯表示即将变红。应减速准备停车；不得以超过限速的车速驶入或通过交叉路口。"},
-{cat:"交通信号灯",q:"红色箭头灯表示什么？",opts:["停车，不能驶入箭头所指方向","可小心转向","减速通过","让行后通行"],a:0,exp:"红色箭头灯表示停车，你不能驶入箭头所指的方向。"},
-{cat:"交通信号灯",q:"当绿灯亮起、你要左转时，应如何做？",opts:["礼让直行车辆和行人，等安全时再完成转向","直行车必须让你先转","立即抢先左转","按喇叭示意对方停下"],a:0,exp:"绿灯左转时，直行车辆享有优先权；应在能看清的位置停下，礼让直行车和行人，等无车时再安全转向。"},
-{cat:"交通信号灯",q:"绿色箭头灯表示什么？",opts:["你享有往该方向行驶的优先通行权","须停车等待","仅可减速通过","让对向车先行"],a:0,exp:"绿色箭头灯表示你享有往该方向行驶的优先通行权，此时不应有对向来车或行人横穿。"},
-{cat:"交通信号灯",q:"黄色箭头灯表示什么？",opts:["信号灯即将变红，做好停车准备并礼让对向来车","享有优先通行权","可加速抢行","前方禁止转向"],a:0,exp:"黄色箭头灯表示信号灯即将变红，应做好停车准备，并礼让对向来车。"},
+{img:"sigRed",cat:"交通信号灯",q:"在亮起红灯的路口完全停车后，如果没有「红灯禁止转向」标志且有足够空间，你可以？",opts:["右转 (完全停车让行后)","直接直行","随意左转到双向道路","加速通过"],a:0,exp:"完全停车后，若无「No turn on red」标志且有足够空间汇入车流，可以右转；也可左转驶入单行道。"},
+{img:"sigFlashRed",cat:"交通信号灯",q:"闪烁的红灯表示什么？",opts:["等同于停车标志，须完全停下再轮流通行","可减速通过","前方施工","等同于绿灯"],a:0,exp:"闪烁的红灯等同于停车标志，须完全停下，等候轮到你通行时再继续行驶。"},
+{img:"sigFlashYellow",cat:"交通信号灯",q:"闪烁的黄灯表示什么？",opts:["等同于让行标志，减速并在享有优先权后通行","必须停车","加速通过","前方无路"],a:0,exp:"闪烁的黄灯等同于让行标志，应减速，将路口当作无信号灯管制的路口，享有优先权后再通行。"},
+{img:"sigYellow",cat:"交通信号灯",q:"长亮的黄灯表示什么？",opts:["信号灯即将变红，应减速并准备停车","可以加速抢行","必须立即急刹","等同于绿灯"],a:0,exp:"黄灯表示即将变红。应减速准备停车；不得以超过限速的车速驶入或通过交叉路口。"},
+{img:"sigRedArrow",cat:"交通信号灯",q:"红色箭头灯表示什么？",opts:["停车，不能驶入箭头所指方向","可小心转向","减速通过","让行后通行"],a:0,exp:"红色箭头灯表示停车，你不能驶入箭头所指的方向。"},
+{img:"sigGreen",cat:"交通信号灯",q:"当绿灯亮起、你要左转时，应如何做？",opts:["礼让直行车辆和行人，等安全时再完成转向","直行车必须让你先转","立即抢先左转","按喇叭示意对方停下"],a:0,exp:"绿灯左转时，直行车辆享有优先权；应在能看清的位置停下，礼让直行车和行人，等无车时再安全转向。"},
+{img:"sigGreenArrow",cat:"交通信号灯",q:"绿色箭头灯表示什么？",opts:["你享有往该方向行驶的优先通行权","须停车等待","仅可减速通过","让对向车先行"],a:0,exp:"绿色箭头灯表示你享有往该方向行驶的优先通行权，此时不应有对向来车或行人横穿。"},
+{img:"sigYellowArrow",cat:"交通信号灯",q:"黄色箭头灯表示什么？",opts:["信号灯即将变红，做好停车准备并礼让对向来车","享有优先通行权","可加速抢行","前方禁止转向"],a:0,exp:"黄色箭头灯表示信号灯即将变红，应做好停车准备，并礼让对向来车。"},
 {cat:"交通信号灯",q:"在华盛顿州，你会看到闪烁的绿灯吗？",opts:["不会 (但在加拿大 BC 省会看到)","会，表示可加速","会，表示让行","会，等同黄灯"],a:0,exp:"在华盛顿州不会看到闪烁的绿灯；在加拿大 BC 省会看到，用于警示有行人正等待过马路。"},
-{cat:"交通信号灯",q:"如果交通信号灯完全故障 (不亮)，应如何处理该路口？",opts:["当作四向停车路口，完全停下并礼让右侧车辆","按平时绿灯通行","加速快速通过","停车等待信号恢复"],a:0,exp:"信号灯故障时，将交叉路口当作四向停车路口: 完全停下，礼让右侧车辆，安全谨慎通过。"},
-{cat:"交通信号灯",q:"高速公路入口匝道信号灯 (匝道监测仪) 红灯亮起时，应该？",opts:["在白色停车线处停车，等变绿再进入匝道","无视继续行驶","减速慢行通过","靠边等待"],a:0,exp:"匝道信号灯与常规信号灯原理相似: 红灯时在白色停车线停车，变绿时沿入口匝道继续行驶。"},
-{cat:"交通信号灯",q:"当交通信号灯变黄时，关于驶入交叉路口的规定是？",opts:["不得以超过限速的车速驶入或通过路口","必须加速冲过","可以任意提速","必须原地停车即使已在路口中"],a:0,exp:"信号灯变黄时，不得以超过限速的车速驶入或通过交叉路口；应减速准备停车。"},
+{img:"sigDark",cat:"交通信号灯",q:"如果交通信号灯完全故障 (不亮)，应如何处理该路口？",opts:["当作四向停车路口，完全停下并礼让右侧车辆","按平时绿灯通行","加速快速通过","停车等待信号恢复"],a:0,exp:"信号灯故障时，将交叉路口当作四向停车路口: 完全停下，礼让右侧车辆，安全谨慎通过。"},
+{img:"rampMeter",cat:"交通信号灯",q:"高速公路入口匝道信号灯 (匝道监测仪) 红灯亮起时，应该？",opts:["在白色停车线处停车，等变绿再进入匝道","无视继续行驶","减速慢行通过","靠边等待"],a:0,exp:"匝道信号灯与常规信号灯原理相似: 红灯时在白色停车线停车，变绿时沿入口匝道继续行驶。"},
+{img:"sigYellow",cat:"交通信号灯",q:"当交通信号灯变黄时，关于驶入交叉路口的规定是？",opts:["不得以超过限速的车速驶入或通过路口","必须加速冲过","可以任意提速","必须原地停车即使已在路口中"],a:0,exp:"信号灯变黄时，不得以超过限速的车速驶入或通过交叉路口；应减速准备停车。"},
 
 /* ---------- 5. 交通标志 ---------- */
-{cat:"交通标志",q:"红色的交通标志通常表示什么？",opts:["禁止或限制交通行为","一般警告","道路指引","施工养护"],a:0,exp:"标志颜色: 红色=禁止/限制；橙色=施工养护；黄色=一般警告；荧光黄绿色=学校/行人/自行车；白色=交通法规；绿色=路线指引；蓝色=服务；棕色=娱乐文化历史。"},
-{cat:"交通标志",q:"橙色的交通标志表示什么？",opts:["警示路段施工和养护","禁止通行","一般路况警告","道路服务设施"],a:0,exp:"橙色标志警示路段施工和养护 (工作区域)。"},
-{cat:"交通标志",q:"黄色的交通标志表示什么？",opts:["警示一般和突发路况","禁止行为","路线方向指引","服务设施"],a:0,exp:"黄色标志用于警示一般和突发路况 (如弯道、并道、路面湿滑等)。"},
-{cat:"交通标志",q:"荧光黄绿色的标志表示什么？",opts:["警示附近有学校、行人和骑自行车者","施工区域","禁止超车","高速出口"],a:0,exp:"荧光黄绿色标志警示附近有学校、行人和骑自行车者。"},
-{cat:"交通标志",q:"白色底色的交通标志通常表示什么？",opts:["道路法规 (如限速标志)","一般警告","娱乐区域","路线指引"],a:0,exp:"白色标志表示道路法规 (管制标志)，例如限速标志。"},
-{cat:"交通标志",q:"绿色的交通标志表示什么？",opts:["提供路线指引或方向信息","禁止行为","一般警告","服务设施"],a:0,exp:"绿色标志提供路线指引或方向信息 (如里程、出口)。"},
-{cat:"交通标志",q:"蓝色的交通标志表示什么？",opts:["为驾驶人提供服务指引信息 (如医院、休息区)","禁止通行","施工警告","历史景点"],a:0,exp:"蓝色标志为驾驶人提供服务指引信息，例如医院、电动车充电站和休息区。"},
-{cat:"交通标志",q:"棕色的交通标志表示什么？",opts:["提示附近有公共娱乐、文化和历史区域","禁止停车","一般警告","限速信息"],a:0,exp:"棕色标志提示附近有公共娱乐、文化和历史区域 (如公园、古迹)。"},
-{cat:"交通标志",q:"八角形 (八边形) 的红色标志是什么标志？",opts:["停车 (STOP) 标志","让行标志","禁止进入","限速标志"],a:0,exp:"八角形红色标志是停车标志，须在停车线、人行横道或转角处完全停车。"},
-{cat:"交通标志",q:"倒三角形的标志通常表示什么？",opts:["让行 (YIELD)——减速并让享有优先权的车辆先行","强制停车","禁止通行","前方施工"],a:0,exp:"让行标志表示须减速，并让享有优先通行权的车辆先行。"},
-{cat:"交通标志",q:"「限速标志」上的数字表示什么？",opts:["理想路况下允许的最高安全车速","建议车速，可随意超过","最低车速","平均车速"],a:0,exp:"最高限速适用于理想路况；路况不佳 (湿滑、大雾) 时须减速。即使低于限速，也可能因不符合路况的高速被罚。"},
-{cat:"交通标志",q:"「WRONG WAY (方向错误)」标志表示什么？",opts:["你的行驶方向有误，应立即停车并掉头","前方施工","单行道入口","可以继续直行"],a:0,exp:"方向错误标志提醒你行驶方向有误，旨在避免正面相撞，应立即停车并掉头。"},
-{cat:"交通标志",q:"看到「DO NOT ENTER (禁止进入)」标志时应如何？",opts:["不能从该方向驶入街道","减速小心驶入","仅夜间禁止","让行后可进入"],a:0,exp:"圆圈内带白色横线的方形标志表示禁止进入，你不能从该方向驶入街道。"},
-{cat:"交通标志",q:"黄色的「NO PASSING ZONE (禁止超车区)」标志通常是什么形状？",opts:["三角形 (尖端朝右)","八角形","圆形","方形"],a:0,exp:"禁止超车区标志为三角形，告知你在坡道、弯道、交叉路口等潜在危险路段禁止超车。"},
-{cat:"交通标志",q:"「CENTER LANE ONLY (共享中间左转专用道)」标志表示该车道用于？",opts:["双向的左转车辆使用，禁止直行或超车","仅右转","超车专用","停车等候"],a:0,exp:"共享中间左转道仅供双向左转车辆使用，禁止用于直行或超车；箭头通常画在路面上。"},
-{cat:"交通标志",q:"「靠右行驶 (Keep Right)」标志的含义是？",opts:["除非需要超车，否则应保持在右侧车道行驶","任何时候都必须靠右","仅限大型车辆","可随意选择车道"],a:0,exp:"该标志提醒你除需超车外，应保持在右侧车道行驶。"},
+{img:"stop",cat:"交通标志",q:"红色的交通标志通常表示什么？",opts:["禁止或限制交通行为","一般警告","道路指引","施工养护"],a:0,exp:"标志颜色: 红色=禁止/限制；橙色=施工养护；黄色=一般警告；荧光黄绿色=学校/行人/自行车；白色=交通法规；绿色=路线指引；蓝色=服务；棕色=娱乐文化历史。"},
+{img:"roadWork",cat:"交通标志",q:"橙色的交通标志表示什么？",opts:["警示路段施工和养护","禁止通行","一般路况警告","道路服务设施"],a:0,exp:"橙色标志警示路段施工和养护 (工作区域)。"},
+{img:"curve",cat:"交通标志",q:"黄色的交通标志表示什么？",opts:["警示一般和突发路况","禁止行为","路线方向指引","服务设施"],a:0,exp:"黄色标志用于警示一般和突发路况 (如弯道、并道、路面湿滑等)。"},
+{img:"school",cat:"交通标志",q:"荧光黄绿色的标志表示什么？",opts:["警示附近有学校、行人和骑自行车者","施工区域","禁止超车","高速出口"],a:0,exp:"荧光黄绿色标志警示附近有学校、行人和骑自行车者。"},
+{img:"speedLimit",cat:"交通标志",q:"白色底色的交通标志通常表示什么？",opts:["道路法规 (如限速标志)","一般警告","娱乐区域","路线指引"],a:0,exp:"白色标志表示道路法规 (管制标志)，例如限速标志。"},
+{img:"guide",cat:"交通标志",q:"绿色的交通标志表示什么？",opts:["提供路线指引或方向信息","禁止行为","一般警告","服务设施"],a:0,exp:"绿色标志提供路线指引或方向信息 (如里程、出口)。"},
+{img:"service",cat:"交通标志",q:"蓝色的交通标志表示什么？",opts:["为驾驶人提供服务指引信息 (如医院、休息区)","禁止通行","施工警告","历史景点"],a:0,exp:"蓝色标志为驾驶人提供服务指引信息，例如医院、电动车充电站和休息区。"},
+{img:"recreation",cat:"交通标志",q:"棕色的交通标志表示什么？",opts:["提示附近有公共娱乐、文化和历史区域","禁止停车","一般警告","限速信息"],a:0,exp:"棕色标志提示附近有公共娱乐、文化和历史区域 (如公园、古迹)。"},
+{img:"stop",cat:"交通标志",q:"八角形 (八边形) 的红色标志是什么标志？",opts:["停车 (STOP) 标志","让行标志","禁止进入","限速标志"],a:0,exp:"八角形红色标志是停车标志，须在停车线、人行横道或转角处完全停车。"},
+{img:"yield",cat:"交通标志",q:"倒三角形的标志通常表示什么？",opts:["让行 (YIELD)——减速并让享有优先权的车辆先行","强制停车","禁止通行","前方施工"],a:0,exp:"让行标志表示须减速，并让享有优先通行权的车辆先行。"},
+{img:"speedLimit",cat:"交通标志",q:"「限速标志」上的数字表示什么？",opts:["理想路况下允许的最高安全车速","建议车速，可随意超过","最低车速","平均车速"],a:0,exp:"最高限速适用于理想路况；路况不佳 (湿滑、大雾) 时须减速。即使低于限速，也可能因不符合路况的高速被罚。"},
+{img:"wrongWay",cat:"交通标志",q:"「WRONG WAY (方向错误)」标志表示什么？",opts:["你的行驶方向有误，应立即停车并掉头","前方施工","单行道入口","可以继续直行"],a:0,exp:"方向错误标志提醒你行驶方向有误，旨在避免正面相撞，应立即停车并掉头。"},
+{img:"doNotEnter",cat:"交通标志",q:"看到「DO NOT ENTER (禁止进入)」标志时应如何？",opts:["不能从该方向驶入街道","减速小心驶入","仅夜间禁止","让行后可进入"],a:0,exp:"圆圈内带白色横线的方形标志表示禁止进入，你不能从该方向驶入街道。"},
+{img:"noPassing",cat:"交通标志",q:"黄色的「NO PASSING ZONE (禁止超车区)」标志通常是什么形状？",opts:["三角形 (尖端朝右)","八角形","圆形","方形"],a:0,exp:"禁止超车区标志为三角形，告知你在坡道、弯道、交叉路口等潜在危险路段禁止超车。"},
+{img:"centerLane",cat:"交通标志",q:"「CENTER LANE ONLY (共享中间左转专用道)」标志表示该车道用于？",opts:["双向的左转车辆使用，禁止直行或超车","仅右转","超车专用","停车等候"],a:0,exp:"共享中间左转道仅供双向左转车辆使用，禁止用于直行或超车；箭头通常画在路面上。"},
+{img:"keepRight",cat:"交通标志",q:"「靠右行驶 (Keep Right)」标志的含义是？",opts:["除非需要超车，否则应保持在右侧车道行驶","任何时候都必须靠右","仅限大型车辆","可随意选择车道"],a:0,exp:"该标志提醒你除需超车外，应保持在右侧车道行驶。"},
 {cat:"交通标志",q:"自动交通安全摄像头会对以下哪些行为进行图像记录？",opts:["闯红灯、铁路道口不停车、学校区域超速","随意变道","未打转向灯","停车过久"],a:0,exp:"自动摄像头记录: 未在红灯停车、未在铁路道口停车、在学校区域超速。罚单邮寄给车主，地点均有清晰标示。"},
-{cat:"交通标志",q:"黄色菱形标志上画有弯曲箭头 (急转弯)，表示？",opts:["前方有急转弯，应注意并适当减速","禁止转弯","前方施工","单行道"],a:0,exp:"黄色警告标志中的弯曲箭头表示前方有急转弯或弯道，应注意路况并适当减速。"},
-{cat:"交通标志",q:"看到画有鹿的黄色菱形标志表示什么？",opts:["该路段有鹿群穿行，注意野生动物","禁止打猎","附近有动物园","前方是农场"],a:0,exp:"画有鹿的黄色标志警示该路段有鹿群穿行，应减速并留意突然出现的动物。"},
-{cat:"交通标志",q:"「TSUNAMI HAZARD ZONE (海啸危险区域)」标志提醒你？",opts:["处于海啸危险区，地震时应前往高地或内陆","前方有海滩浴场","禁止游泳","有渡轮码头"],a:0,exp:"海啸危险区标志提醒该区域在地震时可能有海啸风险，应前往高地或内陆。"},
-{cat:"交通标志",q:"表示「前方并道 (Merge)」的黄色标志提醒你？",opts:["前方车道将合并，注意汇入的车辆","前方分岔","禁止变道","前方施工结束"],a:0,exp:"并道标志警示前方车道将合并，应注意可能汇入的车辆并留出空间。"},
+{img:"curve",cat:"交通标志",q:"黄色菱形标志上画有弯曲箭头 (急转弯)，表示？",opts:["前方有急转弯，应注意并适当减速","禁止转弯","前方施工","单行道"],a:0,exp:"黄色警告标志中的弯曲箭头表示前方有急转弯或弯道，应注意路况并适当减速。"},
+{img:"deer",cat:"交通标志",q:"看到画有鹿的黄色菱形标志表示什么？",opts:["该路段有鹿群穿行，注意野生动物","禁止打猎","附近有动物园","前方是农场"],a:0,exp:"画有鹿的黄色标志警示该路段有鹿群穿行，应减速并留意突然出现的动物。"},
+{img:"tsunami",cat:"交通标志",q:"「TSUNAMI HAZARD ZONE (海啸危险区域)」标志提醒你？",opts:["处于海啸危险区，地震时应前往高地或内陆","前方有海滩浴场","禁止游泳","有渡轮码头"],a:0,exp:"海啸危险区标志提醒该区域在地震时可能有海啸风险，应前往高地或内陆。"},
+{img:"merge",cat:"交通标志",q:"表示「前方并道 (Merge)」的黄色标志提醒你？",opts:["前方车道将合并，注意汇入的车辆","前方分岔","禁止变道","前方施工结束"],a:0,exp:"并道标志警示前方车道将合并，应注意可能汇入的车辆并留出空间。"},
 
 /* ---------- 6. 道路标线 ---------- */
-{cat:"道路标线",q:"黄色的道路标线用来分隔什么？",opts:["反方向行驶的车道","同方向行驶的车道","自行车道","人行道"],a:0,exp:"黄线分隔反方向 (对向) 行驶的车道；白线分隔同方向行驶的车道。"},
-{cat:"道路标线",q:"白色的道路标线用来分隔什么？",opts:["同方向行驶的车道","反方向行驶的车道","机动车道与人行道","上下坡车道"],a:0,exp:"白线分隔同方向行驶的车道；黄线分隔反方向车道。"},
-{cat:"道路标线",q:"两条车道之间是白色虚线，表示？",opts:["在安全的情况下可以越线变换车道","禁止变道","仅可超车","车道即将合并"],a:0,exp:"车道之间的白色虚线表示在安全情况下可越线变换车道。"},
-{cat:"道路标线",q:"白色双实线表示什么？",opts:["越过它属违法行为","可自由变道","可超车","车道即将结束"],a:0,exp:"白色双实线是车道之间的分界，越过白色双实线属违法行为。"},
-{cat:"道路标线",q:"双向双车道中间是黄色虚线时，表示？",opts:["在安全情况下可借对向车道超车","禁止超车","禁止变道","单行道"],a:0,exp:"黄色虚线表示双向双车道的中线，安全时可使用对向车道超车。"},
-{cat:"道路标线",q:"道路中线为黄色双实线时，关于超车的规定是？",opts:["任何方向都不得越线超车","可以随时超车","仅白天可超车","仅右侧车可超车"],a:0,exp:"黄色双实线表示双向道路中线，你不得从任何方向越线超车。"},
-{cat:"道路标线",q:"黄色实线表示什么？",opts:["道路边缘或禁止超车区域","可以超车","车道合并","自行车道"],a:0,exp:"黄色实线标示出道路边缘或禁止超车区域，请勿越过黄色实线超车。"},
-{cat:"道路标线",q:"道路中线是「一条黄色实线 + 一条黄色虚线」，你位于实线一侧时？",opts:["不得超车","可以超车","必须变道","可掉头"],a:0,exp:"位于黄色实线一侧时不得超车；位于虚线一侧时，安全情况下可以超车。"},
-{cat:"道路标线",q:"白色实线表示什么？",opts:["应保持在车道上，除非特殊情况需要变道","可自由变道","禁止行驶","车道即将结束"],a:0,exp:"白色实线表示你应保持在车道上，除非特殊情况需要变道。"},
-{cat:"道路标线",q:"关于「共享的中间左转专用道」，正确的说法是？",opts:["供双向左转车辆使用，不得用于超车，行驶不得超过 300 英尺","可用于直行超车","仅供右转","可长期占用行驶"],a:0,exp:"你可越过己方一侧的黄色实线进入中间左转道，供双向左转或掉头使用；不得用于超车，行驶不应超过 300 英尺。"},
-{cat:"道路标线",q:"HOV / 共乘车道通常如何标示？",opts:["白色实线分隔，路面和标志上有菱形符号","黄色虚线","红色边缘","蓝色实线"],a:0,exp:"HOV (高乘载) 车道用白色实线与其他车道隔开，路面和标志上有菱形符号；摩托车也可使用。"},
-{cat:"道路标线",q:"可逆车道上方显示持续的黄色 X，表示？",opts:["车道正在改变方向，应尽快安全驶离该车道","可正常使用","禁止一切车辆","仅公交可用"],a:0,exp:"可逆车道: 绿色箭头表示可用，红色 X 表示不能用，持续黄色 X 表示车道正在改变方向，应尽快安全离开。"},
-{cat:"道路标线",q:"路面上的黄色条纹 (斜纹) 区域表示什么？",opts:["你不能开车驶入的区域","可临时停车","减速带","自行车道"],a:0,exp:"黄色条纹 (斜纹) 标示出你不能开车驶入的区域。"},
-{cat:"道路标线",q:"消防车道通常如何标示，有何规定？",opts:["标有红色条纹或红色缘石，禁止停车","黄色虚线，可短停","白色实线，可停车","绿色标线，仅限公交"],a:0,exp:"消防车道通常标有红色条纹或红色缘石，禁止在其上停车，以保持救援车辆通道畅通。"},
+{img:"roadYellowDash",cat:"道路标线",q:"黄色的道路标线用来分隔什么？",opts:["反方向行驶的车道","同方向行驶的车道","自行车道","人行道"],a:0,exp:"黄线分隔反方向 (对向) 行驶的车道；白线分隔同方向行驶的车道。"},
+{img:"roadWhiteDash",cat:"道路标线",q:"白色的道路标线用来分隔什么？",opts:["同方向行驶的车道","反方向行驶的车道","机动车道与人行道","上下坡车道"],a:0,exp:"白线分隔同方向行驶的车道；黄线分隔反方向车道。"},
+{img:"roadWhiteDash",cat:"道路标线",q:"两条车道之间是白色虚线，表示？",opts:["在安全的情况下可以越线变换车道","禁止变道","仅可超车","车道即将合并"],a:0,exp:"车道之间的白色虚线表示在安全情况下可越线变换车道。"},
+{img:"roadDoubleWhite",cat:"道路标线",q:"白色双实线表示什么？",opts:["越过它属违法行为","可自由变道","可超车","车道即将结束"],a:0,exp:"白色双实线是车道之间的分界，越过白色双实线属违法行为。"},
+{img:"roadYellowDash",cat:"道路标线",q:"双向双车道中间是黄色虚线时，表示？",opts:["在安全情况下可借对向车道超车","禁止超车","禁止变道","单行道"],a:0,exp:"黄色虚线表示双向双车道的中线，安全时可使用对向车道超车。"},
+{img:"roadDoubleYellow",cat:"道路标线",q:"道路中线为黄色双实线时，关于超车的规定是？",opts:["任何方向都不得越线超车","可以随时超车","仅白天可超车","仅右侧车可超车"],a:0,exp:"黄色双实线表示双向道路中线，你不得从任何方向越线超车。"},
+{img:"roadYellowSolid",cat:"道路标线",q:"黄色实线表示什么？",opts:["道路边缘或禁止超车区域","可以超车","车道合并","自行车道"],a:0,exp:"黄色实线标示出道路边缘或禁止超车区域，请勿越过黄色实线超车。"},
+{img:"roadYellowMix",cat:"道路标线",q:"道路中线是「一条黄色实线 + 一条黄色虚线」，你位于实线一侧时？",opts:["不得超车","可以超车","必须变道","可掉头"],a:0,exp:"位于黄色实线一侧时不得超车；位于虚线一侧时，安全情况下可以超车。"},
+{img:"roadWhiteSolid",cat:"道路标线",q:"白色实线表示什么？",opts:["应保持在车道上，除非特殊情况需要变道","可自由变道","禁止行驶","车道即将结束"],a:0,exp:"白色实线表示你应保持在车道上，除非特殊情况需要变道。"},
+{img:"roadCenterTurn",cat:"道路标线",q:"关于「共享的中间左转专用道」，正确的说法是？",opts:["供双向左转车辆使用，不得用于超车，行驶不得超过 300 英尺","可用于直行超车","仅供右转","可长期占用行驶"],a:0,exp:"你可越过己方一侧的黄色实线进入中间左转道，供双向左转或掉头使用；不得用于超车，行驶不应超过 300 英尺。"},
+{img:"hovLane",cat:"道路标线",q:"HOV / 共乘车道通常如何标示？",opts:["白色实线分隔，路面和标志上有菱形符号","黄色虚线","红色边缘","蓝色实线"],a:0,exp:"HOV (高乘载) 车道用白色实线与其他车道隔开，路面和标志上有菱形符号；摩托车也可使用。"},
+{img:"laneControl",cat:"道路标线",q:"可逆车道上方显示持续的黄色 X，表示？",opts:["车道正在改变方向，应尽快安全驶离该车道","可正常使用","禁止一切车辆","仅公交可用"],a:0,exp:"可逆车道: 绿色箭头表示可用，红色 X 表示不能用，持续黄色 X 表示车道正在改变方向，应尽快安全离开。"},
+{img:"roadHatched",cat:"道路标线",q:"路面上的黄色条纹 (斜纹) 区域表示什么？",opts:["你不能开车驶入的区域","可临时停车","减速带","自行车道"],a:0,exp:"黄色条纹 (斜纹) 标示出你不能开车驶入的区域。"},
+{img:"redCurb",cat:"道路标线",q:"消防车道通常如何标示，有何规定？",opts:["标有红色条纹或红色缘石，禁止停车","黄色虚线，可短停","白色实线，可停车","绿色标线，仅限公交"],a:0,exp:"消防车道通常标有红色条纹或红色缘石，禁止在其上停车，以保持救援车辆通道畅通。"},
 {cat:"道路标线",q:"红色缘石 (路缘) 通常表示什么？",opts:["禁止停车或有装载限制","可长时间停车","仅限残障停车","免费停车区"],a:0,exp:"有色路缘表示停车限制: 白色=仅短时间停车；黄色或红色=装载区或其他限制 (通常禁停)。"},
 {cat:"道路标线",q:"白色缘石通常表示什么？",opts:["只允许短时间停车","禁止停车","装载区","残障专用"],a:0,exp:"白色路缘表示只允许短时间停车。"},
 {cat:"道路标线",q:"「自行车优先区 (bike box)」附近，红灯亮起时你能否右转？",opts:["不能在红灯亮起时右转","可以右转","可以左转","可直接直行"],a:0,exp:"在自行车优先区附近，你不能在红灯亮起时右转；车辆须停在白线后，直到该区已无自行车。"},
@@ -301,7 +308,7 @@ const QUESTIONS = [
 {cat:"共享道路",q:"当铁路平交道口的红灯闪烁且铃声响起时，你应该？",opts:["必须停车，切勿绕过闸门驶入","加速抢过","减速慢行通过","仅在看到火车时停车"],a:0,exp:"红灯闪烁、铃声响起时，无论闸门是否关闭都必须停车；切勿绕过闸门。火车始终享有优先通行权。"},
 {cat:"共享道路",q:"在铁路平交道口停车时，应在距离最近的栏杆/铁轨多少英尺处停车？",opts:["15 至 50 英尺","5 至 10 英尺","1 至 5 英尺","60 至 100 英尺"],a:0,exp:"在信号灯闪烁、闸门下降、火车逼近等情况下，应在距离道口最近栏杆 15 至 50 英尺处停车等待。"},
 {cat:"共享道路",q:"当看到或听到闪灯/鸣笛的应急车辆 (消防车、救护车、警车) 时，应该？",opts:["立即靠道路右侧停车，等其通过后再汇入","加速让开","保持原速","停在原车道中央"],a:0,exp:"应急车辆始终享有优先通行权。看到或听到信号后，应立即靠道路右侧停车，等应急车辆通过后，再打信号灯重新汇入车流。"},
-{cat:"共享道路",q:"限时速低于 25 英里/小时的农用车辆后方通常贴有什么标志？",opts:["三角形标志或图案 (慢速车辆标志)","红色八角形","蓝色圆形","绿色方形"],a:0,exp:"限速低于 25 英里/小时的农用车辆后方贴有三角形慢速车辆标志。遇到时应耐心减速，超车时留足距离 (至少 3 英尺)。"},
+{img:"smv",cat:"共享道路",q:"限时速低于 25 英里/小时的农用车辆后方通常贴有什么标志？",opts:["三角形标志或图案 (慢速车辆标志)","红色八角形","蓝色圆形","绿色方形"],a:0,exp:"限速低于 25 英里/小时的农用车辆后方贴有三角形慢速车辆标志。遇到时应耐心减速，超车时留足距离 (至少 3 英尺)。"},
 {cat:"共享道路",q:"关于行人和骑自行车者的通行权，正确的说法是？",opts:["无论是否有交通标志，行人和骑车者在人行横道和路口都享有优先权","车辆总是优先","仅在绿灯时让行","仅在有标志时让行"],a:0,exp:"请始终礼让行人。无论道路是否设有交通标志，行人和骑自行车者在人行横道和十字路口都享有优先通行权。"},
 {cat:"共享道路",q:"如果同向只有一条车道，需要超越骑自行车者，应如何？",opts:["确认对向无来车后借道超车，并留至少 3 英尺距离","紧贴着挤过去","鸣笛让骑车者靠边","禁止超车只能跟随"],a:0,exp:"每方向仅一条车道时，须确认对向无来车后借道超车，并在你车最宽处与骑车者之间留至少 3 英尺距离；勿为超车驶入有来车的对向道。"},
 {cat:"共享道路",q:"当公交车开启转向信号灯并准备驶回车道时，你应该？",opts:["礼让公交车","抢先超越","鸣笛催促","保持原速不让"],a:0,exp:"当与你同向行驶的公交车开启转向灯准备驶回车道时，请礼让这些车辆。"},
@@ -382,18 +389,18 @@ const QUESTIONS = [
 {cat:"碰撞·执法",q:"目睹他人车祸时，正确的做法是？",opts:["不阻挡救援人员、遵循现场指挥、经过时专注驾驶","放慢车速盯着看","停在车道上围观","鸣笛催促"],a:0,exp:"目睹车祸时: 请勿阻挡紧急救援人员；遵循警察、消防员的指示；经过时专注驾驶。放慢车速盯着现场看会造成交通拥堵。"},
 
 /* ---------- 14. 更多交通标志 ---------- */
-{cat:"更多标志",q:"五边形 (五角形) 的荧光黄绿色标志通常表示什么？",opts:["学校区域或学校人行横道","医院","禁止通行","高速出口"],a:0,exp:"五边形荧光黄绿色标志用于警示学校区域、学校人行横道，提醒附近有学生。"},
-{cat:"更多标志",q:"铁路道口处的白色 X 形交叉标志 (Crossbuck) 表示什么？",opts:["铁路平交道口","道路交叉","禁止进入","医院方向"],a:0,exp:"白色 X 形交叉标志 (Railroad Crossing / Crossbuck) 标示铁路平交道口。"},
-{cat:"更多标志",q:"黄色菱形标志上有两个上下相对的箭头 (↑↓)，表示什么？",opts:["双向通行","单行道","禁止掉头","车道合并"],a:0,exp:"上下相对箭头的黄色标志表示前方为双向通行道路。"},
-{cat:"更多标志",q:"「SOFT SHOULDER (软质路肩)」标志提醒你？",opts:["路肩松软，不宜驶上","前方施工","禁止停车","道路变宽"],a:0,exp:"软质路肩标志警示路肩松软，车辆不宜驶上，以免陷入或失控。"},
-{cat:"更多标志",q:"黄色菱形标志内有一个滑动的车辆图案 (湿滑路面)，表示？",opts:["前方路面湿滑，注意打滑","前方有洗车场","禁止行驶","可以加速"],a:0,exp:"湿滑路面警告标志提醒前方路面可能湿滑，应减速并注意防止打滑。"},
-{cat:"更多标志",q:"黄色的「SLOW MOVING VEHICLES (慢行车辆)」或后方三角形反光标志表示？",opts:["前方有慢速行驶的车辆 (如农用车)","前方限速降低","禁止超车","单行道"],a:0,exp:"慢行车辆标志表示前方有限速低于 25 英里/小时的慢速车辆，应耐心减速并小心超越。"},
-{cat:"更多标志",q:"「REDUCED SPEED AHEAD (前方限速降低)」标志的作用是？",opts:["提前告知前方限速将降低，做好减速准备","限速将提高","前方禁止通行","前方是学校"],a:0,exp:"该标志提前告知前方限速将降低，让你有时间做好减速准备。"},
-{cat:"更多标志",q:"黄色菱形标志上有一个向右合并的箭头图案，表示？",opts:["前方有车辆汇入 / 并道","车道分岔","禁止变道","前方急弯"],a:0,exp:"并道 (Merge) 标志警示前方有新增车道汇入或车道合并，应注意汇入车辆。"},
-{cat:"更多标志",q:"黄色菱形标志内画有向左弯再向右弯的箭头 (蜿蜒公路)，表示？",opts:["前方有一系列连续弯道","前方是环岛","前方施工","前方是桥梁"],a:0,exp:"蜿蜒公路 / 反向弯道标志表示前方有一系列连续弯道，应减速并小心通过。"},
-{cat:"更多标志",q:"「TIRE CHAINS REQUIRED (建议/要求安装防滑链)」的电子标志通常出现在？",opts:["山区或冰雪路段","市中心","海滩","停车场"],a:0,exp:"该标志通常出现在山区或冰雪路段，提示需要安装防滑链才能通行。"},
-{cat:"更多标志",q:"「距离标志 / 里程标志」(绿色) 的作用是？",opts:["指示前往城市或地点的方向与距离","显示限速","警示危险","指示服务设施"],a:0,exp:"目的地标志 (绿色) 指示前往城市、机场、州界线等地点的方向与距离。"},
-{cat:"更多标志",q:"红色圆圈中间有一条红色斜杠的标志表示什么？",opts:["禁止某些行为 (如禁止左转、禁止掉头)","警告","服务设施","路线指引"],a:0,exp:"禁止标志是一个红色圆圈中间有一条红色斜杠，表示禁止某些行为，例如禁止左转、右转或掉头。"},
+{img:"school",cat:"更多标志",q:"五边形 (五角形) 的荧光黄绿色标志通常表示什么？",opts:["学校区域或学校人行横道","医院","禁止通行","高速出口"],a:0,exp:"五边形荧光黄绿色标志用于警示学校区域、学校人行横道，提醒附近有学生。"},
+{img:"crossbuck",cat:"更多标志",q:"铁路道口处的白色 X 形交叉标志 (Crossbuck) 表示什么？",opts:["铁路平交道口","道路交叉","禁止进入","医院方向"],a:0,exp:"白色 X 形交叉标志 (Railroad Crossing / Crossbuck) 标示铁路平交道口。"},
+{img:"twoWay",cat:"更多标志",q:"黄色菱形标志上有两个上下相对的箭头 (↑↓)，表示什么？",opts:["双向通行","单行道","禁止掉头","车道合并"],a:0,exp:"上下相对箭头的黄色标志表示前方为双向通行道路。"},
+{img:"softShoulder",cat:"更多标志",q:"「SOFT SHOULDER (软质路肩)」标志提醒你？",opts:["路肩松软，不宜驶上","前方施工","禁止停车","道路变宽"],a:0,exp:"软质路肩标志警示路肩松软，车辆不宜驶上，以免陷入或失控。"},
+{img:"slippery",cat:"更多标志",q:"黄色菱形标志内有一个滑动的车辆图案 (湿滑路面)，表示？",opts:["前方路面湿滑，注意打滑","前方有洗车场","禁止行驶","可以加速"],a:0,exp:"湿滑路面警告标志提醒前方路面可能湿滑，应减速并注意防止打滑。"},
+{img:"smv",cat:"更多标志",q:"黄色的「SLOW MOVING VEHICLES (慢行车辆)」或后方三角形反光标志表示？",opts:["前方有慢速行驶的车辆 (如农用车)","前方限速降低","禁止超车","单行道"],a:0,exp:"慢行车辆标志表示前方有限速低于 25 英里/小时的慢速车辆，应耐心减速并小心超越。"},
+{img:"reducedSpeed",cat:"更多标志",q:"「REDUCED SPEED AHEAD (前方限速降低)」标志的作用是？",opts:["提前告知前方限速将降低，做好减速准备","限速将提高","前方禁止通行","前方是学校"],a:0,exp:"该标志提前告知前方限速将降低，让你有时间做好减速准备。"},
+{img:"merge",cat:"更多标志",q:"黄色菱形标志上有一个向右合并的箭头图案，表示？",opts:["前方有车辆汇入 / 并道","车道分岔","禁止变道","前方急弯"],a:0,exp:"并道 (Merge) 标志警示前方有新增车道汇入或车道合并，应注意汇入车辆。"},
+{img:"winding",cat:"更多标志",q:"黄色菱形标志内画有向左弯再向右弯的箭头 (蜿蜒公路)，表示？",opts:["前方有一系列连续弯道","前方是环岛","前方施工","前方是桥梁"],a:0,exp:"蜿蜒公路 / 反向弯道标志表示前方有一系列连续弯道，应减速并小心通过。"},
+{img:"chains",cat:"更多标志",q:"「TIRE CHAINS REQUIRED (建议/要求安装防滑链)」的电子标志通常出现在？",opts:["山区或冰雪路段","市中心","海滩","停车场"],a:0,exp:"该标志通常出现在山区或冰雪路段，提示需要安装防滑链才能通行。"},
+{img:"guide",cat:"更多标志",q:"「距离标志 / 里程标志」(绿色) 的作用是？",opts:["指示前往城市或地点的方向与距离","显示限速","警示危险","指示服务设施"],a:0,exp:"目的地标志 (绿色) 指示前往城市、机场、州界线等地点的方向与距离。"},
+{img:"noLeftTurn",cat:"更多标志",q:"红色圆圈中间有一条红色斜杠的标志表示什么？",opts:["禁止某些行为 (如禁止左转、禁止掉头)","警告","服务设施","路线指引"],a:0,exp:"禁止标志是一个红色圆圈中间有一条红色斜杠，表示禁止某些行为，例如禁止左转、右转或掉头。"},
 
 /* ---------- 15. 共享道路·杂项 ---------- */
 {cat:"共享道路·杂项",q:"在扫雪机附近行驶时，为什么要格外谨慎？",opts:["扫雪机会将积雪扫到路边，形成类似暴风雪的情况阻挡视线","扫雪机速度很快","扫雪机会突然停车","扫雪机不受交规约束"],a:0,exp:"在扫雪设备附近行驶要谨慎: 扫雪机会将路面积雪扫到路边，引发类似暴风雪的情况，阻碍跟车太近者的视野。"},
@@ -462,11 +469,11 @@ const QUESTIONS = [
 {cat:"更多标志",q:"橙色的「DETOUR (绕行)」标志的作用是？",opts:["指示因施工等原因需绕道行驶的路线","表示前方禁止通行","表示终点","表示限速"],a:0,exp:"DETOUR 绕行标志为橙色 (施工区域标志)，指示因道路施工、封闭等原因需要绕行的路线。"},
 {cat:"更多标志",q:"电子显示的「可变限速标志」(数字限速牌) 的作用是？",opts:["通过动态调整限速来分散车流、缓解拥堵","显示固定的最低限速","仅在夜间生效","显示气温"],a:0,exp:"可变限速与提前预警标志通过动态调整限速来分散车流；数字提前预警标志还能快速关闭整条车道，并在驾驶人抵达缓行路段前提供警示。"},
 {cat:"更多标志",q:"黑底白字的「ONE WAY (单行道)」标志表示？",opts:["只能按箭头指示的方向行驶","可双向通行","禁止进入","前方施工"],a:0,exp:"单行道标志表示只能按照箭头指示的方向行驶，切勿在单行道逆行。"},
-{cat:"更多标志",q:"黄色菱形标志内画有交通信号灯图案，表示？",opts:["前方有信号灯，做好停车准备","前方是加油站","禁止通行","前方是学校"],a:0,exp:"该黄色警告标志表示前方有交通信号灯，应提前做好减速或停车的准备。"},
+{img:"signalAhead",cat:"更多标志",q:"黄色菱形标志内画有交通信号灯图案，表示？",opts:["前方有信号灯，做好停车准备","前方是加油站","禁止通行","前方是学校"],a:0,exp:"该黄色警告标志表示前方有交通信号灯，应提前做好减速或停车的准备。"},
 {cat:"更多标志",q:"黄色菱形标志上标有「14'-4\"」这样的数字，表示什么？",opts:["限高 (前方净空高度)","限速","限重","限宽"],a:0,exp:"标有高度数字 (如 14'-4\") 的黄色标志表示限高，即前方结构物的净空高度，超高车辆不得通过。"},
 {cat:"更多标志",q:"黄色菱形标志上画有主路加一条侧向短路 (┣ 形)，表示？",opts:["前方有辅路 / 侧路交汇","前方是死路","禁止右转","前方是环岛"],a:0,exp:"该标志表示前方有辅路 (side road) 与主路交汇，应注意可能有车辆从侧路驶入。"},
-{cat:"更多标志",q:"黄色菱形标志内画有一个十字 (＋) 图案，表示？",opts:["前方是交叉路口","前方是医院","禁止直行","道路施工"],a:0,exp:"画有十字图案的黄色标志表示前方是交叉路口，应注意横向来往的车辆和行人。"},
-{cat:"更多标志",q:"黄色菱形标志内画有一辆车头朝上的斜坡图案，表示？",opts:["前方有坡道","前方是桥梁","前方限高","前方施工"],a:0,exp:"该黄色警告标志表示前方有坡道 (陡坡)，下坡时应控制车速，大型车辆尤其需要注意。"},
+{img:"crossRoad",cat:"更多标志",q:"黄色菱形标志内画有一个十字 (＋) 图案，表示？",opts:["前方是交叉路口","前方是医院","禁止直行","道路施工"],a:0,exp:"画有十字图案的黄色标志表示前方是交叉路口，应注意横向来往的车辆和行人。"},
+{img:"hill",cat:"更多标志",q:"黄色菱形标志内画有一辆车头朝上的斜坡图案，表示？",opts:["前方有坡道","前方是桥梁","前方限高","前方施工"],a:0,exp:"该黄色警告标志表示前方有坡道 (陡坡)，下坡时应控制车速，大型车辆尤其需要注意。"},
 {cat:"更多标志",q:"黄色底色、显示「EXIT 25 MPH」的标志属于哪种标志？",opts:["速度警示标志 (建议时速)","强制限速标志","禁止超车标志","服务设施标志"],a:0,exp:"这类黄色标志是速度警示标志 (建议时速)，表示因潜在危险或路况 (通常是弯道或出口匝道) 而建议调整的车速。"},
 {cat:"更多标志",q:"蓝色标志上的「H」符号通常表示？",opts:["附近有医院","前方有加油站","休息区","历史景点"],a:0,exp:"蓝色是服务设施标志，「H」表示附近有医院；其他常见的还有电动车充电站、休息区等。"},
 
@@ -537,6 +544,85 @@ const QUESTIONS = [
 const $=id=>document.getElementById(id);
 let pool=[], cur=0, answered=[], mode="practice";
 
+/* ===================== 内置标志配图 (SVG，无需联网加载) ===================== */
+const SIGNS={};
+{
+  const RED="#d3222a", YEL="#f2b705", GRN="#2f9e44", BLK="#17191c", FYG="#cbdb2a", ORG="#ef7d1a", BLU="#1d5fa8";
+
+  /* 信号灯: idx 0=红 1=黄 2=绿, o.blink 闪烁, o.arrow 箭头灯 */
+  const sig=(idx,o={})=>{
+    const ys=[34,82,130], cols=[RED,YEL,GRN];
+    let cells="";
+    for(let i=0;i<3;i++){
+      if(i===idx&&o.arrow){
+        cells+=`<circle cx="34" cy="${ys[i]}" r="18" fill="#0c0e10"/><path${o.blink?' class="blink"':''} transform="translate(34 ${ys[i]})" d="M-13 0 L1 -11 L1 -4 H13 V4 H1 V11 Z" fill="${cols[i]}"/>`;
+      }else if(i===idx){
+        cells+=`<circle cx="34" cy="${ys[i]}" r="18" fill="${cols[i]}"${o.blink?' class="blink"':''}/>`;
+      }else{
+        cells+=`<circle cx="34" cy="${ys[i]}" r="18" fill="#43494f"/>`;
+      }
+    }
+    return `<svg viewBox="0 0 68 164"><rect x="6" y="6" width="56" height="152" rx="12" fill="#22262a" stroke="#0d0f11" stroke-width="3"/>${cells}</svg>`;
+  };
+  SIGNS.sigRed=sig(0); SIGNS.sigFlashRed=sig(0,{blink:1});
+  SIGNS.sigYellow=sig(1); SIGNS.sigFlashYellow=sig(1,{blink:1});
+  SIGNS.sigGreen=sig(2); SIGNS.sigDark=sig(-1);
+  SIGNS.sigRedArrow=sig(0,{arrow:1}); SIGNS.sigYellowArrow=sig(1,{arrow:1}); SIGNS.sigGreenArrow=sig(2,{arrow:1});
+  SIGNS.rampMeter=`<svg viewBox="0 0 150 118"><rect x="6" y="6" width="56" height="104" rx="12" fill="#22262a" stroke="#0d0f11" stroke-width="3"/><circle cx="34" cy="34" r="18" fill="${RED}"/><circle cx="34" cy="82" r="18" fill="#43494f"/><rect x="72" y="20" width="72" height="76" rx="4" fill="#fff" stroke="${BLK}" stroke-width="3"/><text x="108" y="44" text-anchor="middle" font-size="15" font-weight="700" fill="${BLK}">1 CAR</text><text x="108" y="64" text-anchor="middle" font-size="15" font-weight="700" fill="${BLK}">PER</text><text x="108" y="84" text-anchor="middle" font-size="15" font-weight="700" fill="${BLK}">GREEN</text></svg>`;
+
+  /* 黄色菱形警告牌 */
+  const dia=(inner,fill=YEL)=>`<svg viewBox="0 0 150 150"><rect x="26" y="26" width="98" height="98" rx="12" transform="rotate(45 75 75)" fill="${fill}" stroke="${BLK}" stroke-width="4"/>${inner}</svg>`;
+  SIGNS.curve=dia(`<path d="M60 108 V84 Q60 64 80 64 H88" fill="none" stroke="${BLK}" stroke-width="11"/><path d="M84 50 L106 64 L84 78 Z" fill="${BLK}"/>`);
+  SIGNS.winding=dia(`<path d="M75 114 C50 98 100 82 75 66 L75 58" fill="none" stroke="${BLK}" stroke-width="10"/><path d="M63 60 L75 36 L87 60 Z" fill="${BLK}"/>`);
+  SIGNS.merge=dia(`<path d="M64 114 V60" stroke="${BLK}" stroke-width="10" fill="none"/><path d="M94 114 Q94 88 70 74" stroke="${BLK}" stroke-width="9" fill="none"/><path d="M52 62 L64 34 L76 62 Z" fill="${BLK}"/>`);
+  SIGNS.twoWay=dia(`<path d="M62 58 V112" stroke="${BLK}" stroke-width="10"/><path d="M50 60 L62 34 L74 60 Z" fill="${BLK}"/><path d="M88 38 V92" stroke="${BLK}" stroke-width="10"/><path d="M76 90 L88 116 L100 90 Z" fill="${BLK}"/>`);
+  SIGNS.crossRoad=dia(`<path d="M75 40 V110 M40 75 H110" stroke="${BLK}" stroke-width="14"/>`);
+  SIGNS.signalAhead=dia(`<rect x="61" y="40" width="28" height="70" rx="7" fill="${BLK}"/><circle cx="75" cy="54" r="8" fill="${RED}"/><circle cx="75" cy="75" r="8" fill="${YEL}"/><circle cx="75" cy="96" r="8" fill="${GRN}"/>`);
+  SIGNS.slippery=dia(`<g transform="rotate(-18 75 62)"><rect x="53" y="52" width="44" height="16" rx="7" fill="${BLK}"/><rect x="62" y="42" width="24" height="14" rx="5" fill="${BLK}"/><circle cx="63" cy="70" r="6" fill="${BLK}"/><circle cx="87" cy="70" r="6" fill="${BLK}"/></g><path d="M52 112 q9 -7 0 -14 q-9 -7 0 -14 M78 116 q9 -7 0 -14 q-9 -7 0 -14" fill="none" stroke="${BLK}" stroke-width="6"/>`);
+  SIGNS.hill=dia(`<path d="M36 104 H114 V72 Z" fill="${BLK}"/><g transform="rotate(-16 70 60)"><rect x="46" y="50" width="34" height="14" rx="3" fill="${BLK}"/><rect x="80" y="54" width="12" height="10" rx="2" fill="${BLK}"/><circle cx="54" cy="68" r="5" fill="${BLK}"/><circle cx="72" cy="68" r="5" fill="${BLK}"/><circle cx="86" cy="68" r="5" fill="${BLK}"/></g>`);
+  SIGNS.deer=dia(`<text x="75" y="92" text-anchor="middle" font-size="52">🦌</text>`);
+  SIGNS.softShoulder=dia(`<text x="75" y="70" text-anchor="middle" font-size="14" font-weight="800" fill="${BLK}">SOFT</text><text x="75" y="90" text-anchor="middle" font-size="14" font-weight="800" fill="${BLK}">SHOULDER</text>`);
+  SIGNS.roadWork=dia(`<text x="75" y="58" text-anchor="middle" font-size="15" font-weight="800" fill="${BLK}">ROAD</text><text x="75" y="80" text-anchor="middle" font-size="15" font-weight="800" fill="${BLK}">WORK</text><text x="75" y="102" text-anchor="middle" font-size="15" font-weight="800" fill="${BLK}">AHEAD</text>`,ORG);
+
+  /* 各类标准标志 */
+  SIGNS.stop=`<svg viewBox="0 0 150 150"><polygon points="46,8 104,8 142,46 142,104 104,142 46,142 8,104 8,46" fill="${RED}" stroke="#fff" stroke-width="6"/><text x="75" y="89" text-anchor="middle" font-size="38" font-weight="800" fill="#fff" letter-spacing="2">STOP</text></svg>`;
+  SIGNS.yield=`<svg viewBox="0 0 150 140"><polygon points="6,8 144,8 75,132" fill="${RED}"/><polygon points="24,19 126,19 75,110" fill="#fff"/><text x="75" y="49" text-anchor="middle" font-size="21" font-weight="800" fill="${RED}">YIELD</text></svg>`;
+  SIGNS.doNotEnter=`<svg viewBox="0 0 150 150"><rect x="4" y="4" width="142" height="142" rx="10" fill="#fff" stroke="#c8ced6" stroke-width="2"/><circle cx="75" cy="75" r="62" fill="${RED}"/><rect x="27" y="66" width="96" height="18" rx="3" fill="#fff"/><text x="75" y="52" text-anchor="middle" font-size="16" font-weight="800" fill="#fff">DO NOT</text><text x="75" y="112" text-anchor="middle" font-size="16" font-weight="800" fill="#fff">ENTER</text></svg>`;
+  SIGNS.wrongWay=`<svg viewBox="0 0 210 100"><rect x="4" y="4" width="202" height="92" rx="10" fill="${RED}" stroke="#fff" stroke-width="4"/><text x="105" y="42" text-anchor="middle" font-size="30" font-weight="800" fill="#fff">WRONG</text><text x="105" y="80" text-anchor="middle" font-size="30" font-weight="800" fill="#fff">WAY</text></svg>`;
+  SIGNS.noPassing=`<svg viewBox="0 0 210 110"><polygon points="6,6 6,104 200,55" fill="${YEL}" stroke="${BLK}" stroke-width="3"/><text x="70" y="48" text-anchor="middle" font-size="14" font-weight="800" fill="${BLK}" transform="rotate(-13 70 48)">NO PASSING</text><text x="58" y="74" text-anchor="middle" font-size="14" font-weight="800" fill="${BLK}" transform="rotate(13 58 74)">ZONE</text></svg>`;
+  SIGNS.speedLimit=`<svg viewBox="0 0 120 150"><rect x="4" y="4" width="112" height="142" rx="10" fill="#fff" stroke="${BLK}" stroke-width="4"/><text x="60" y="36" text-anchor="middle" font-size="17" font-weight="700" fill="${BLK}">SPEED</text><text x="60" y="58" text-anchor="middle" font-size="17" font-weight="700" fill="${BLK}">LIMIT</text><text x="60" y="122" text-anchor="middle" font-size="54" font-weight="800" fill="${BLK}">60</text></svg>`;
+  SIGNS.reducedSpeed=`<svg viewBox="0 0 170 120"><rect x="4" y="4" width="162" height="112" rx="8" fill="#fff" stroke="${BLK}" stroke-width="4"/><text x="85" y="38" text-anchor="middle" font-size="21" font-weight="800" fill="${BLK}">REDUCED</text><text x="85" y="68" text-anchor="middle" font-size="21" font-weight="800" fill="${BLK}">SPEED</text><text x="85" y="98" text-anchor="middle" font-size="21" font-weight="800" fill="${BLK}">AHEAD</text></svg>`;
+  SIGNS.keepRight=`<svg viewBox="0 0 150 120"><rect x="4" y="4" width="142" height="112" rx="8" fill="#fff" stroke="${BLK}" stroke-width="4"/><text x="75" y="36" text-anchor="middle" font-size="20" font-weight="800" fill="${BLK}">KEEP</text><text x="75" y="62" text-anchor="middle" font-size="20" font-weight="800" fill="${BLK}">RIGHT</text><path d="M52 92 H86" stroke="${BLK}" stroke-width="8"/><polygon points="84,80 108,92 84,104" fill="${BLK}"/></svg>`;
+  SIGNS.centerLane=`<svg viewBox="0 0 150 150"><rect x="4" y="4" width="142" height="142" rx="8" fill="#fff" stroke="${BLK}" stroke-width="4"/><text x="75" y="30" text-anchor="middle" font-size="15" font-weight="800" fill="${BLK}">CENTER LANE</text><path d="M52 100 V70 Q52 58 40 58 H36" fill="none" stroke="${BLK}" stroke-width="8"/><polygon points="40,44 18,58 40,72" fill="${BLK}"/><path d="M98 54 V84 Q98 96 110 96 H114" fill="none" stroke="${BLK}" stroke-width="8"/><polygon points="110,82 132,96 110,110" fill="${BLK}"/><text x="75" y="140" text-anchor="middle" font-size="15" font-weight="800" fill="${BLK}">ONLY</text></svg>`;
+  SIGNS.guide=`<svg viewBox="0 0 210 110"><rect x="4" y="4" width="202" height="102" rx="10" fill="#1c7c39" stroke="#fff" stroke-width="4"/><text x="22" y="44" font-size="22" fill="#fff" font-weight="600">Seattle</text><text x="188" y="44" font-size="22" fill="#fff" text-anchor="end" font-weight="600">12</text><text x="22" y="84" font-size="22" fill="#fff" font-weight="600">Tacoma</text><text x="188" y="84" font-size="22" fill="#fff" text-anchor="end" font-weight="600">38</text></svg>`;
+  SIGNS.service=`<svg viewBox="0 0 130 130"><rect x="4" y="4" width="122" height="122" rx="10" fill="${BLU}" stroke="#fff" stroke-width="4"/><text x="65" y="92" text-anchor="middle" font-size="70" font-weight="800" fill="#fff">H</text></svg>`;
+  SIGNS.recreation=`<svg viewBox="0 0 130 130"><rect x="4" y="4" width="122" height="122" rx="10" fill="#7a4a21" stroke="#fff" stroke-width="4"/><polygon points="65,26 98,88 32,88" fill="none" stroke="#fff" stroke-width="6"/><path d="M65 38 V88" stroke="#fff" stroke-width="5"/><text x="65" y="114" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">CAMPGROUND</text></svg>`;
+  SIGNS.school=`<svg viewBox="0 0 150 140"><polygon points="75,6 144,58 122,134 28,134 6,58" fill="${FYG}" stroke="${BLK}" stroke-width="4"/><g fill="${BLK}"><circle cx="60" cy="52" r="9"/><path d="M52 64 L68 64 L72 96 L64 96 L60 78 L56 96 L48 96 Z"/><circle cx="92" cy="44" r="9"/><path d="M84 56 L100 56 L104 88 L96 88 L92 70 L88 88 L80 88 Z"/></g></svg>`;
+  SIGNS.crossbuck=`<svg viewBox="0 0 170 170"><g stroke="#9aa4ad" stroke-width="2"><rect x="10" y="72" width="150" height="26" rx="4" fill="#fff" transform="rotate(-28 85 85)"/><rect x="10" y="72" width="150" height="26" rx="4" fill="#fff" transform="rotate(28 85 85)"/></g><text x="85" y="91" text-anchor="middle" font-size="15" font-weight="700" fill="${BLK}" transform="rotate(-28 85 85)">RAILROAD</text><text x="85" y="91" text-anchor="middle" font-size="15" font-weight="700" fill="${BLK}" transform="rotate(28 85 85)">CROSSING</text></svg>`;
+  SIGNS.smv=`<svg viewBox="0 0 150 140"><polygon points="75,8 142,126 8,126" fill="#a61e1e"/><polygon points="75,34 122,116 28,116" fill="${ORG}"/></svg>`;
+  SIGNS.tsunami=`<svg viewBox="0 0 160 150"><rect x="4" y="4" width="152" height="142" rx="10" fill="#fff" stroke="${BLU}" stroke-width="5"/><path d="M20 58 Q40 30 62 50 Q84 70 104 50 Q118 38 140 50" stroke="${BLU}" stroke-width="9" fill="none"/><text x="80" y="98" text-anchor="middle" font-size="19" font-weight="800" fill="${BLU}">TSUNAMI</text><text x="80" y="126" text-anchor="middle" font-size="15" font-weight="700" fill="${BLU}">HAZARD ZONE</text></svg>`;
+  SIGNS.noLeftTurn=`<svg viewBox="0 0 150 150"><rect x="4" y="4" width="142" height="142" rx="10" fill="#fff" stroke="#c8ced6" stroke-width="2"/><path d="M88 108 V76 Q88 62 74 62 H62" fill="none" stroke="${BLK}" stroke-width="10"/><polygon points="64,46 38,62 64,78" fill="${BLK}"/><circle cx="75" cy="75" r="60" fill="none" stroke="${RED}" stroke-width="10"/><line x1="33" y1="33" x2="117" y2="117" stroke="${RED}" stroke-width="10"/></svg>`;
+  SIGNS.chains=`<svg viewBox="0 0 210 110"><rect x="4" y="4" width="202" height="102" rx="8" fill="#101418" stroke="#3a4046" stroke-width="3"/><text x="105" y="46" text-anchor="middle" font-size="23" font-weight="700" fill="#ffb02e" font-family="monospace">CHAINS</text><text x="105" y="82" text-anchor="middle" font-size="23" font-weight="700" fill="#ffb02e" font-family="monospace">REQUIRED</text></svg>`;
+
+  /* 道路标线示意图 (俯视) */
+  const ROADBG=inner=>`<svg viewBox="0 0 230 130"><rect x="0" y="12" width="230" height="106" rx="8" fill="#40464d"/><rect x="10" y="20" width="210" height="4" rx="2" fill="#dfe6ec"/><rect x="10" y="106" width="210" height="4" rx="2" fill="#dfe6ec"/>${inner}</svg>`;
+  const arrR=y=>`<path d="M92 ${y} H128 M128 ${y} l-11 -8 M128 ${y} l-11 8" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  const arrL=y=>`<path d="M138 ${y} H102 M102 ${y} l11 -8 M102 ${y} l11 8" stroke="#fff" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+  const LINE=(y,color,dash,w=5)=>`<line x1="10" y1="${y}" x2="220" y2="${y}" stroke="${color}" stroke-width="${w}"${dash?' stroke-dasharray="24 16"':''}/>`;
+  SIGNS.roadYellowDash=ROADBG(LINE(65,YEL,1)+arrL(42)+arrR(90));
+  SIGNS.roadDoubleYellow=ROADBG(LINE(59,YEL)+LINE(71,YEL)+arrL(40)+arrR(92));
+  SIGNS.roadYellowSolid=ROADBG(LINE(65,YEL)+arrL(42)+arrR(90));
+  SIGNS.roadYellowMix=ROADBG(LINE(59,YEL)+LINE(71,YEL,1)+arrL(40)+arrR(92));
+  SIGNS.roadWhiteDash=ROADBG(LINE(65,"#eef2f5",1)+arrR(42)+arrR(90));
+  SIGNS.roadDoubleWhite=ROADBG(LINE(59,"#eef2f5")+LINE(71,"#eef2f5")+arrR(40)+arrR(92));
+  SIGNS.roadWhiteSolid=ROADBG(LINE(65,"#eef2f5")+arrR(42)+arrR(90));
+  SIGNS.roadHatched=ROADBG(LINE(52,YEL)+LINE(78,YEL)+`<g stroke="${YEL}" stroke-width="5">${[30,64,98,132,166,200].map(x=>`<line x1="${x}" y1="78" x2="${x+18}" y2="52"/>`).join("")}</g>`+arrL(34)+arrR(98));
+  SIGNS.roadCenterTurn=ROADBG(LINE(46,YEL)+LINE(54,YEL,1,4)+LINE(76,YEL,1,4)+LINE(84,YEL)+arrL(32)+arrR(100)+`<path d="M70 70 V66 Q70 60 64 60 H60" stroke="#fff" stroke-width="4" fill="none"/><polygon points="62,54 50,60 62,66" fill="#fff"/><path d="M160 60 V64 Q160 70 166 70 H170" stroke="#fff" stroke-width="4" fill="none"/><polygon points="168,64 180,70 168,76" fill="#fff"/>`);
+  SIGNS.hovLane=ROADBG(LINE(65,"#eef2f5")+`<g stroke="#fff" stroke-width="4" fill="none"><path d="M60 40 L74 26 L88 40 L74 54 Z"/><path d="M150 40 L164 26 L178 40 L164 54 Z"/></g>`+arrR(90));
+  SIGNS.laneControl=`<svg viewBox="0 0 230 106"><rect x="14" y="24" width="54" height="54" rx="6" fill="#101418"/><path d="M27 38 L55 66 M55 38 L27 66" stroke="#e03131" stroke-width="7" stroke-linecap="round"/><rect x="88" y="24" width="54" height="54" rx="6" fill="#101418"/><path d="M101 38 L129 66 M129 38 L101 66" stroke="#ffd43b" stroke-width="7" stroke-linecap="round"/><rect x="162" y="24" width="54" height="54" rx="6" fill="#101418"/><path d="M189 36 V64 M189 64 l-10 -12 M189 64 l10 -12" stroke="#37b24d" stroke-width="7" stroke-linecap="round" fill="none"/></svg>`;
+  SIGNS.redCurb=`<svg viewBox="0 0 230 120"><rect x="0" y="70" width="230" height="50" fill="#40464d"/><rect x="0" y="54" width="230" height="16" fill="${RED}"/><rect x="0" y="10" width="230" height="44" fill="#aeb6bd"/><text x="115" y="40" text-anchor="middle" font-size="17" font-weight="800" fill="#5b6770">SIDEWALK</text><text x="115" y="102" text-anchor="middle" font-size="16" font-weight="800" fill="#fff">FIRE LANE — NO PARKING</text></svg>`;
+}
+
 /* ---- 错题本 / 收藏夹: 保存在浏览器本地 (localStorage)，按题目内容生成稳定 ID ---- */
 function QID(q){ let h=5381; const s=q.q; for(let i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h|=0; } return "q"+(h>>>0).toString(36); }
 function loadSet(k){ try{ return new Set(JSON.parse(localStorage.getItem(k)||"[]")); }catch(e){ return new Set(); } }
@@ -577,6 +663,11 @@ function buildPool(doShuffle){
   if(cat==="__wrong")      arr=arr.filter(q=>wrongSet.has(q._id));
   else if(cat==="__star")  arr=arr.filter(q=>starSet.has(q._id));
   else if(cat!=="__all")   arr=arr.filter(q=>q.cat===cat);
+  /* 打乱每道题的选项顺序，避免正确答案总是出现在同一位置 */
+  arr=arr.map(q=>{
+    const ord=shuffle([...q.opts.keys()]);
+    return {...q, opts:ord.map(i=>q.opts[i]), a:ord.indexOf(q.a)};
+  });
   if(mode==="exam"){ arr=shuffle(arr).slice(0,Math.min(40,arr.length)); }
   else if(doShuffle){ arr=shuffle(arr); }
   pool=arr; cur=0; answered=new Array(pool.length).fill(null);
@@ -594,6 +685,7 @@ function render(){
   if(pool.length===0){
     $("qCat").textContent="—"; $("qNo").textContent="";
     $("opts").innerHTML=""; $("explain").className="explain";
+    $("qImg").className="qimg"; $("qImg").innerHTML="";
     $("starBtn").style.visibility="hidden";
     $("qText").textContent = cval==="__wrong"
       ? "🎉 错题本是空的 — 答错的题会自动收进这里，之后可回来专攻。"
@@ -611,6 +703,9 @@ function render(){
   sb.textContent=isStar?"★ 已收藏":"☆ 收藏";
   sb.classList.toggle("on",isStar);
   $("qText").textContent=q.q;
+  const im=$("qImg");
+  if(q.img&&SIGNS[q.img]){ im.innerHTML=SIGNS[q.img]; im.className="qimg show"; }
+  else{ im.innerHTML=""; im.className="qimg"; }
   const optsEl=$("opts"); optsEl.innerHTML="";
   const chosen=answered[cur];
   q.opts.forEach((text,idx)=>{

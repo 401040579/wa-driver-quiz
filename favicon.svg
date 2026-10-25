@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="华盛顿州驾照笔试中文题库">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b6b3a"/>
+      <stop offset="1" stop-color="#1f4e79"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+  <path d="M9 56 L55 56 L40 9 L24 9 Z" fill="#1b2630"/>
+  <path d="M9 56 L24 9 M55 56 L40 9" stroke="#f4f7fa" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M32 14 V52" stroke="#f2b705" stroke-width="3.2" stroke-dasharray="7 6" stroke-linecap="round"/>
+</svg>

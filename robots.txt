@@ -1,0 +1,7 @@
+# https://401040579.github.io/wa-driver-quiz/
+# 注意：这是 GitHub Pages 项目站点 (子路径)，爬虫只读取域名根目录的 /robots.txt，
+# 本文件不会被 Google/Bing 自动读取；sitemap 请在 Search Console / Bing Webmaster 里手动提交。
+User-agent: *
+Allow: /
+
+Sitemap: https://401040579.github.io/wa-driver-quiz/sitemap.xml

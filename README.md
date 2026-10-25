@@ -80,7 +80,21 @@ GitHub Pages 项目站点没有自己的域名，不能用 DNS 验证，用「HT
 
 ### Lighthouse SEO 分数
 
-_待填：push 后对线上地址运行 `lighthouse --only-categories=seo`。_
+2026-10-24 对线上地址 `https://401040579.github.io/wa-driver-quiz/` 运行 Lighthouse 13.5.0（`--only-categories=seo`，Chrome for Testing 153 headless）：
+
+| 设备模拟 | SEO 分数 |
+| --- | --- |
+| Mobile（默认） | **100** |
+| Desktop（`--preset=desktop`） | **100** |
+
+通过的审计：is-crawlable、document-title、meta-description、http-status-code、link-text、crawlable-anchors、hreflang、canonical；`robots-txt` 为 N/A（域名根目录没有 robots.txt，见上文说明）；`structured-data` 属于人工检查项，可用 [Rich Results Test](https://search.google.com/test/rich-results) 或 [Schema Markup Validator](https://validator.schema.org/) 粘贴线上地址复核。
+
+复现：
+
+```bash
+CHROME_PATH=/path/to/Chrome npx -y lighthouse https://401040579.github.io/wa-driver-quiz/ \
+  --only-categories=seo --output=html --output-path=./lh-seo.html --chrome-flags="--headless=new"
+```
 
 ### 题库拆分评估
 
